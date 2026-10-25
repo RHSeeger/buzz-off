@@ -73,6 +73,8 @@ database.rules.json The Firebase security rules (pasted into the Firebase consol
     - `inviteCodes` - the invite code used for each family, so a guest's families can be rejoined after signing in
       with a Google account that already had its own
     - `usedFamily` - whether family play has been used here (if not, Firebase isn't loaded at all)
+    - `familyView` - for each family, which of the day's words the player sees (`FamilyView`: whether they chose to see
+      everyone's, and others' words they entered); only the latest day is kept
 - Values that can be worked out (score, rank, all-time stats) are **not** stored; they are calculated when needed.
   (`history` is the exception: it is a cache of each day's summary, so the stats don't need every day's puzzle rebuilt.)
 - Every storage access is wrapped in try/catch: the game must work, without remembering anything, when storage is
@@ -100,6 +102,9 @@ database.rules.json The Firebase security rules (pasted into the Firebase consol
 - A family's day is the date in the family's timezone (the creator's), so everyone plays the same puzzle.
 - The game follows the family's day live (`onValue`). Its own writes show at once, even offline; Firebase sends them
   when it reconnects (if the page stays open).
+- What the screen shows in family play comes from `session.ts`'s `shownFound()`, `shownScore()` and `shownRank()`:
+  the player's own words (plus others' they entered) and score until they choose to see everyone's. `score()` and
+  `rank()` stay the family's, for stats, badges and the history.
 - Stats and badges have three scopes: local play, the player in one family, and the player in all their families
   (their family histories added up, day by day). Badges are earned and kept separately for each.
 

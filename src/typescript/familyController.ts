@@ -5,16 +5,17 @@ import { evaluateAchievements } from './gamelogic/achievements';
 import { currentGameUrl } from './gamelogic/bookmarklet';
 import { addDays, dayKey, localTimeZone } from './gamelogic/dates';
 import { puzzleForDay } from './gamelogic/day';
-import { playerDayState, teamDayState } from './gamelogic/familyDay';
+import { playerDayState, teamDayState, viewForDay } from './gamelogic/familyDay';
 import { formatInviteLink, parseInviteLink } from './gamelogic/invites';
 import { combineHistories } from './gamelogic/personal';
 import { lifetimeStats, summarizeDay } from './gamelogic/stats';
 import { getJSON, setJSON } from './gamelogic/storage';
-import { findersOf, rank, session } from './session';
+import { findersOf, othersHidden, rank, session, shownRank } from './session';
 import type { DaySummary } from './types/DaySummary';
 import type { EarnedBadge } from './types/EarnedBadge';
 import type { FamilyDayData } from './types/FamilyDayData';
 import type { FamilyHooks } from './types/FamilyHooks';
+import type { FamilyView } from './types/FamilyView';
 import type { ImportedPuzzle } from './types/ImportedPuzzle';
 import type { InviteLink } from './types/InviteLink';
 import type { PersonalData } from './types/PersonalData';
@@ -54,8 +55,8 @@ let watchingConnection = false;
 /** Show the welcome screen when the family's day first arrives */
 let splashOnFirstData = false;
 
-/** The family's rank when its day last changed (-1 until the day arrives), to spot rank-ups */
-let lastTeamRank = -1;
+/** The rank shown when the family's day last changed (-1 until the day arrives), to spot rank-ups */
+let lastShownRank = -1;
 
 /** Waiting for the family's name and members to arrive */
 let readyCallbacks: (() => void)[] = [];
@@ -99,6 +100,27 @@ function remember(me: PlayerProfile, link: InviteLink): void {
     setJSON('profile', me);
     setJSON('inviteCodes', { ...getJSON<Record<string, string>>('inviteCodes', {}), [link.fid]: link.code });
     setJSON('usedFamily', true);
+}
+
+/**
+ * Loads which of a family's words the player sees on a day, from the device.
+ *
+ * @param fid - The family
+ * @param key - The day key
+ * @returns The view (a new one, showing only the player's words, if none is saved for that day)
+ */
+function loadView(fid: string, key: string): FamilyView {
+    return viewForDay(getJSON<Record<string, FamilyView>>('familyView', {})[fid], key);
+}
+
+/**
+ * Saves which of the family's words the player sees today (only the latest day is kept for each family).
+ *
+ * @param fid - The family
+ * @param view - The view
+ */
+function saveView(fid: string, view: FamilyView): void {
+    setJSON('familyView', { ...getJSON<Record<string, FamilyView>>('familyView', {}), [fid]: view });
 }
 
 /**
@@ -183,7 +205,7 @@ export async function enterFamily(fid: string, options: { splash: boolean }): Pr
     session.mode = { kind: 'family', fid };
     setJSON('mode', session.mode);
     setJSON('usedFamily', true);
-    session.family = { fid, meta: null, members: {}, nytEnabled: false, data: null };
+    session.family = { fid, meta: null, members: {}, nytEnabled: false, data: null, view: loadView(fid, '') };
     const listed = session.personal.families.find((f) => f.fid === fid)?.name;
     hooks.showConnecting(`Connecting to ${listed ?? 'your family'}…`);
     splashOnFirstData = options.splash;
@@ -248,7 +270,8 @@ export function openFamilyDay(key: string, splash = false): void {
     stopDay?.();
     session.todayKey = key;
     fam.data = null;
-    lastTeamRank = -1;
+    fam.view = loadView(fam.fid, key);
+    lastShownRank = -1;
     if (splash) splashOnFirstData = true;
     const fid = fam.fid;
     stopDay = api.watchFamilyDay(
@@ -295,10 +318,40 @@ function applyFamilyDay(fid: string, key: string, data: FamilyDayData): void {
             hooks.importPuzzle(text);
         }
     }
-    const r = rank();
-    if (!first && lastTeamRank >= 0 && r > lastTeamRank) hooks.celebrate(r);
-    lastTeamRank = r;
+    // While others' words are hidden, the rank shown (and celebrated) is the player's own
+    const r = shownRank();
+    if (!first && lastShownRank >= 0 && r > lastShownRank) hooks.celebrate(r);
+    lastShownRank = r;
     recordFamilyProgress();
+}
+
+/**
+ * Shows every word the family found today, or only the player's own again. The rank shown changes without a
+ * celebration.
+ *
+ * @param on - True to show everyone's words
+ */
+export function showEveryonesWords(on: boolean): void {
+    const fam = session.family;
+    if (!fam) return;
+    fam.view = { ...fam.view, showAll: on };
+    saveView(fam.fid, fam.view);
+    if (fam.data) lastShownRank = shownRank();
+    hooks.render();
+}
+
+/**
+ * Shows a word someone else found, after the player entered it (while others' words are hidden). It doesn't count
+ * for the player.
+ *
+ * @param word - The word
+ */
+export function revealWord(word: string): void {
+    const fam = session.family;
+    if (!fam || !othersHidden() || fam.view.seen.includes(word)) return;
+    fam.view = { ...fam.view, seen: [...fam.view.seen, word] };
+    saveView(fam.fid, fam.view);
+    hooks.render(word);
 }
 
 /**
@@ -393,6 +446,7 @@ export function addFamilyWord(word: string): void {
         const by = fam.data?.found.find((f) => f.w === word)?.by;
         const name = by && by !== user.uid ? fam.members[by]?.name : null;
         hooks.flash(name ? `${name} found that just before you` : "Couldn't save that word. Check your connection.");
+        if (name) revealWord(word);
     });
 }
 

@@ -24,6 +24,13 @@ describe('createWordbox', () => {
         const box = createWordbox(el);
         box.render(['gambled', 'able'], puzzle, 'able');
         expect(el.querySelector('.wordbox-count')?.textContent).toBe('You have found 2 words');
+        // In family play the count is the family's, unless the player is seeing only their own words
+        const finders = { gambled: { name: 'Mom', color: 'red' }, able: { name: 'Kid', color: 'blue' } };
+        box.render(['gambled', 'able'], puzzle, undefined, finders);
+        expect(el.querySelector('.wordbox-count')?.textContent).toBe('Your family has found 2 words');
+        box.render(['gambled', 'able'], puzzle, undefined, finders, false);
+        expect(el.querySelector('.wordbox-count')?.textContent).toBe('You have found 2 words');
+        box.render(['gambled', 'able'], puzzle, 'able');
         const items = [...el.querySelectorAll('li')];
         expect(items.map((li) => li.textContent)).toEqual(['Able', 'Gambled']);
         expect(items[1].classList.contains('pangram')).toBe(true);

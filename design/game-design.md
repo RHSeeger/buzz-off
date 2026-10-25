@@ -91,10 +91,18 @@ Family play needs a Firebase project (SETUP-FIREBASE.md). Until one is set up, t
 - **One shared game per family:** everyone plays the same puzzle each day (the day changes at midnight in the
   family's timezone, the creator's), with one list of found words. Each word counts for whoever found it first; new
   words appear for everyone straight away. "Already found (by Mom)" says who beat you to it.
+- **Only your own words, at first:** each day, a player sees only the words *they* found, with their own score, rank,
+  progress bar and celebrations, and hints counting what's left from their point of view. Entering a word someone
+  else found says "Already found (by Mom)" and adds it to their list (with Mom's dot), without counting for them. The
+  link beside "Who are you playing with?" says "Show everyone's words (+12)"; it asks first, then shows every word
+  and the family's score and rank for the rest of the day ("Show only my words" goes back). The next day starts
+  hidden again. The choice is kept on the device.
 - **Who found what:** each found word has a dot in its finder's color, the progress bar is split by player color, and
-  the Stats screen shows each member's points, words, pangrams and longest word today. Yesterday's Answers shows who
-  found each word.
-- **Ranks and celebrations** are the family's: when the family reaches Genius, everyone gets the celebration.
+  the Stats screen shows each member's points, words, pangrams and longest word today (while others' words are
+  hidden, their longest word shows only as its length, e.g. "7 letters"). Yesterday's Answers shows who found each
+  word.
+- **Ranks and celebrations** are the family's once everyone's words are shown: when the family reaches Genius,
+  everyone seeing the family's words gets the celebration. Stats and badges always use the family's rank (see below).
 - **Creating a family:** "Create a family" asks for the family's name, and your name and color, then shows the
   invite link to share.
 - **Joining:** opening an invite link (`<game>#join=<family>:<code>`) asks for your name and color. You stay a member
@@ -126,8 +134,3 @@ Family play needs a Firebase project (SETUP-FIREBASE.md). Until one is set up, t
 
 - The game can be added to a phone's home screen and works offline. When a new version is deployed, it offers
   "Update available — Reload".
-
-## Open Questions
-
-- Should there be an option to "Hide others' words until I find them" (showing only counts, and revealing a word with
-  "Mom found that already" when you enter it)? It was in the original plan; not built yet (see todo.md).

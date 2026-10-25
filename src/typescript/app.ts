@@ -17,6 +17,8 @@ import {
     openFamilyYesterday,
     openJoinFamily,
     openPlayMode,
+    revealWord,
+    showEveryonesWords,
     switchToLocal,
     useGeneratedInFamily,
 } from './familyController';
@@ -29,7 +31,17 @@ import { checkGuess, parsePuzzles } from './gamelogic/puzzle';
 import { lifetimeStats, summarizeDay } from './gamelogic/stats';
 import { getJSON, remove, setJSON } from './gamelogic/storage';
 import { loadWordlist } from './gamelogic/wordlist';
-import { familyName, findersOf, rank, score, session, teamShares } from './session';
+import {
+    familyName,
+    findersOf,
+    othersHidden,
+    rank,
+    session,
+    shownFound,
+    shownRank,
+    shownScore,
+    teamShares,
+} from './session';
 import type { EarnedBadge } from './types/EarnedBadge';
 import type { GuessError } from './types/GuessError';
 import type { Hive } from './types/Hive';
@@ -178,6 +190,33 @@ function renderModeChip(): void {
 }
 
 /**
+ * Draws the button that shows everyone's words (or only the player's own again), in family play.
+ */
+function renderViewChip(): void {
+    const chip = getElement('view-chip');
+    chip.hidden = !session.family?.data;
+    if (chip.hidden) return;
+    const others = session.day.found.length - shownFound().length;
+    chip.textContent = othersHidden() ? `Show everyone's words${others ? ` (+${others})` : ''}` : 'Show only my words';
+}
+
+/**
+ * Shows everyone's words (asking first, if it shows words the player hasn't seen), or only the player's own again.
+ */
+function toggleView(): void {
+    if (!othersHidden()) {
+        showEveryonesWords(false);
+        return;
+    }
+    const others = session.day.found.length - shownFound().length;
+    const ask =
+        `Show all ${session.day.found.length} words your family has found today, including ${others} you haven't ` +
+        'found? Your score and rank will be the family’s.';
+    if (others && !confirm(ask)) return;
+    showEveryonesWords(true);
+}
+
+/**
  * Redraws everything that changes during play.
  *
  * @param highlight - A word to flash in the found-words list (the one just found)
@@ -185,13 +224,19 @@ function renderModeChip(): void {
 function renderAll(highlight?: string): void {
     renderModeChip();
     if (!session.puzzle) return;
-    const shares = teamShares().map((c) => ({ color: c.color, points: c.points }));
-    renderProgress(getElement('progress'), score(), session.puzzle.maxScore, shares);
+    renderViewChip();
+    const hidden = othersHidden();
+    const shares = teamShares()
+        .filter((c) => !hidden || c.uid === session.user?.uid)
+        .map((c) => ({ color: c.color, points: c.points }));
+    renderProgress(getElement('progress'), shownScore(), session.puzzle.maxScore, shares);
+    const shown = shownFound();
     wordbox.render(
-        session.day.found.map((f) => f.w),
+        shown.map((f) => f.w),
         session.puzzle,
         highlight,
-        findersOf(session.day.found),
+        findersOf(shown),
+        !!session.family && !hidden,
     );
     renderInput();
     getElement('source-badge').hidden = session.puzzle.source !== 'nyt';
@@ -275,7 +320,8 @@ function praise(points: number, pangram: boolean): string {
 }
 
 /**
- * Returns the message for a word that was already found: in family play, says who found it.
+ * Returns the message for a word that was already found: in family play, says who found it (and shows the word, if
+ * the player was only seeing their own).
  *
  * @param word - The word
  * @returns The message
@@ -285,6 +331,7 @@ function alreadyFoundMessage(word: string): string {
     const by = session.day.found.find((f) => f.w === word)?.by;
     if (!fam || !by) return ERRORS.found;
     if (by === session.user?.uid) return 'You already found that';
+    revealWord(word);
     return `Already found (by ${fam.members[by]?.name ?? 'someone'})`;
 }
 
@@ -300,8 +347,8 @@ function celebrate(reached: number, byFamily: boolean): void {
             () =>
                 showCelebration({
                     rankName: RANKS[reached].name,
-                    score: score(),
-                    words: session.found.size,
+                    score: shownScore(),
+                    words: byFamily ? session.found.size : session.myDay.found.length,
                     perfect: reached === PERFECT_RANK,
                     family: byFamily,
                 }),
@@ -474,11 +521,15 @@ function openStats(tab: 'stats' | 'badges' = 'stats'): void {
                 const current = session.family?.fid === scope.fid;
                 const hist = familyHistory(scope.fid);
                 const key = current ? session.todayKey : dayKey();
+                // While others' words are hidden, today's rank is the player's own, and others' longest words are
+                // shown only as their length
+                const myUid = session.user?.uid;
                 return {
                     stats: lifetimeStats(hist, key),
-                    today: current ? myFamilySummary() : (hist[key] ?? null),
+                    today: current ? { ...myFamilySummary(), rank: shownRank() } : (hist[key] ?? null),
                     unlocked: session.personal.achievements[scope.fid] ?? {},
                     team: current ? teamShares() : null,
+                    showLongest: othersHidden() ? (uid: string) => uid === myUid : undefined,
                 };
             }
             const hist = allFamiliesHistory();
@@ -507,10 +558,12 @@ function openYesterday(): void {
 }
 
 /**
- * Opens the Hints screen, recording when the hints are shown.
+ * Opens the Hints screen, recording when the hints are shown. The words left are counted from the words shown (so,
+ * while others' words are hidden, from the player's point of view).
  */
 function openHints(): void {
-    showHints(session.puzzle, session.found, session.myDay.hintsUsed, () => {
+    const found = new Set(shownFound().map((f) => f.w));
+    showHints(session.puzzle, found, session.myDay.hintsUsed, () => {
         if (session.myDay.hintsUsed) return;
         if (inFamily()) {
             markFamilyHints();
@@ -528,9 +581,11 @@ function openHints(): void {
 function openSplash(): void {
     const family = inFamily();
     const history = session.mode.kind === 'family' ? familyHistory(session.mode.fid) : session.history;
+    // While others' words are hidden, today's rank is the player's own (their stats keep the family's)
+    const myToday = family && session.myDay.found.length ? { ...myFamilySummary(), rank: shownRank() } : undefined;
     showSplash({
         todayKey: session.todayKey,
-        today: family ? (session.myDay.found.length ? myFamilySummary() : undefined) : history[session.todayKey],
+        today: family ? myToday : history[session.todayKey],
         yesterday: history[addDays(session.todayKey, -1)],
         stats: currentStats(),
         familyName: familyName(),
@@ -745,7 +800,8 @@ function wireUi(): void {
     getElement('btn-enter').addEventListener('click', submit);
     getElement('btn-shuffle').replaceChildren(icon('shuffle'));
     getElement('btn-shuffle').addEventListener('click', () => hive.shuffle());
-    getElement('progress').addEventListener('click', () => showRankings(score(), session.puzzle.maxScore));
+    getElement('progress').addEventListener('click', () => showRankings(shownScore(), session.puzzle.maxScore));
+    getElement('view-chip').addEventListener('click', toggleView);
     getElement('source-badge').addEventListener('click', () => showNytImport(settingsActions));
     getElement('mode-chip').addEventListener('click', () => void openPlayMode());
     getElement('btn-play-local').addEventListener('click', () => switchToLocal('Playing on your own for now.'));
@@ -761,7 +817,7 @@ function wireUi(): void {
         showReady,
         openSplash,
         openLocal: () => openLocalDay(dayKey()),
-        celebrate: (r) => celebrate(r, true),
+        celebrate: (r) => celebrate(r, !othersHidden()),
         announceBadges,
         importPuzzle,
         showNytImport: () => showNytImport(settingsActions),

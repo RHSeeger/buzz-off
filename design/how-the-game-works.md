@@ -62,6 +62,12 @@ is told straight away and redraws. Firebase's security rules (`database.rules.js
 members can see the family, joining needs the current invite code, a word can only be written once (so the first
 finder keeps the credit), and today's puzzle can't be changed once a word is found.
 
+Every member's game receives all of the family's words, but each day it starts by showing only the player's own,
+with their own score and rank. A word someone else found shows up once the player enters it ("Already found (by
+Mom)"), without counting for them. "Show everyone's words" shows the lot, and the family's score and rank, for the rest
+of the day. This choice is only remembered by that browser (it is about what the screen shows, not the family's game);
+the words are still in the data, so it keeps the game fair, not secret.
+
 Each player is a Firebase "user". At first that's a guest account that lives in the browser, so no sign-up is needed.
 Signing in with Google turns the guest into a Google account, which works on any device.
 

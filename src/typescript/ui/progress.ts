@@ -93,10 +93,10 @@ export function createWordbox(el: HTMLElement): Wordbox {
 
     return {
         close: () => setOpen(false),
-        render(found, puzzle, highlight, finders): void {
+        render(found, puzzle, highlight, finders, familyCount = !!finders): void {
             const n = found.length;
             count.textContent = n === 0 ? 'Your words…' : `You have found ${n} word${n === 1 ? '' : 's'}`;
-            if (finders && n > 0) count.textContent = `Your family has found ${n} word${n === 1 ? '' : 's'}`;
+            if (familyCount && n > 0) count.textContent = `Your family has found ${n} word${n === 1 ? '' : 's'}`;
             clear(preview);
             for (const w of found.slice(-8).reverse()) {
                 preview.append(h('span', { class: puzzle.pangrams.includes(w) ? 'pangram' : '' }, cap(w)));

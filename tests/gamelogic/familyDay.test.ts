@@ -6,6 +6,8 @@ import {
     playerDayState,
     storedNyt,
     teamDayState,
+    viewForDay,
+    visibleFound,
 } from '../../src/typescript/gamelogic/familyDay';
 import { makePuzzle, rankThresholds } from '../../src/typescript/gamelogic/puzzle';
 import type { ImportedPuzzle } from '../../src/typescript/types/ImportedPuzzle';
@@ -105,5 +107,38 @@ describe('team and player views', () => {
         expect(geniusTime(data.found, puzzle)).toBeNull();
         const all = puzzle.answers.map((w, i) => ({ w, at: 100 + i, by: 'mom' }));
         expect(geniusTime(all, puzzle)).not.toBeNull();
+    });
+});
+
+describe('viewForDay', () => {
+    it("starts each day showing only the player's words", () => {
+        expect(viewForDay(null, '2026-10-25')).toEqual({ day: '2026-10-25', showAll: false, seen: [] });
+        expect(viewForDay({ day: '2026-10-24', showAll: true, seen: ['able'] }, '2026-10-25')).toEqual({
+            day: '2026-10-25',
+            showAll: false,
+            seen: [],
+        });
+    });
+
+    it("keeps the day's saved choice", () => {
+        const saved = { day: '2026-10-25', showAll: true, seen: ['able'] };
+        expect(viewForDay(saved, '2026-10-25')).toEqual(saved);
+    });
+});
+
+describe('visibleFound', () => {
+    const found = [
+        { w: 'able', at: 1, by: 'mom' },
+        { w: 'bagel', at: 2, by: 'kid' },
+        { w: 'label', at: 3, by: 'mom' },
+    ];
+
+    it("shows the player's own words, and others' they entered", () => {
+        const view = { day: 'd', showAll: false, seen: ['label'] };
+        expect(visibleFound(found, 'kid', view).map((f) => f.w)).toEqual(['bagel', 'label']);
+    });
+
+    it('shows every word once the player chooses to', () => {
+        expect(visibleFound(found, 'kid', { day: 'd', showAll: true, seen: [] })).toEqual(found);
     });
 });

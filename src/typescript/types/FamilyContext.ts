@@ -1,6 +1,7 @@
 import type { FamilyDayData } from './FamilyDayData';
 import type { FamilyMember } from './FamilyMember';
 import type { FamilyMeta } from './FamilyMeta';
+import type { FamilyView } from './FamilyView';
 
 /**
  * Defines the FamilyContext type: what the game knows about the family it is playing with.
@@ -20,4 +21,6 @@ export type FamilyContext = {
     nytEnabled: boolean;
     /** Today's play (null until it arrives) */
     data: FamilyDayData | null;
+    /** Which of today's words the player sees (saved on the device) */
+    view: FamilyView;
 };

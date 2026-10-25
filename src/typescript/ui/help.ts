@@ -48,6 +48,12 @@ export function showHelp(): void {
                 'your families. A family shares one puzzle and one list of words each day; each word counts for ',
                 'whoever found it first. Send the invite link to bring people in.',
             ),
+            h(
+                'p',
+                {},
+                'Each day you see only your own words and score at first. Enter a word someone else found and it ',
+                'joins your list (it counts for them). Tap “Show everyone’s words” to see the whole family’s.',
+            ),
             h('h3', {}, 'Badges'),
             h('p', {}, 'Play daily to build streaks and earn badges. Open the trophy to see your stats and badges.'),
             h('p', { class: 'muted small' }, `A new ${APP_NAME} puzzle is released every day at midnight.`),

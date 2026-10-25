@@ -133,3 +133,17 @@ assumed. No change needed.
 **Why:** Checked in a desktop browser's console.
 **Affects:** `gamelogic/bookmarklet.ts`
 **Status:** Active
+
+## 2026-10-25 — Family players see only their own words until they choose to see everyone's
+**Decision:** In family play, each day starts showing a player only the words they found, with their own score, rank,
+progress bar and celebrations; hints count what's left from their point of view, and the Stats table shows others'
+longest words only as a length. Entering a word someone else found adds it to their list (not their score). "Show
+everyone's words" (asked to confirm) shows every word and the family's score and rank for the rest of that day; it
+can be switched back. The choice is saved on the device (`familyView`), not in Firebase, so no rules change. Stats,
+badges and the saved history keep using the family's rank.
+**Why:** Asked for, so seeing the family's words doesn't spoil a player's own search. Per day, so each day starts
+fresh. On the device because it is only about what one screen shows; keeping it out of Firebase avoids changing
+`database.rules.json`. It isn't secret: every member's game still receives every word.
+**Affects:** game-design.md (Family Play); code-design.md (State, Family Play); `session.ts`, `familyController.ts`,
+`app.ts`, `gamelogic/familyDay.ts`, `ui/statsView.ts`; resolves the "Hide others' words" open question
+**Status:** Active

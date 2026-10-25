@@ -1,9 +1,10 @@
 import { GENIUS_RANK } from './data/ranks';
-import { contributions } from './gamelogic/familyDay';
+import { contributions, visibleFound } from './gamelogic/familyDay';
 import { rankIndexFor, scoreOf } from './gamelogic/puzzle';
 import type { AuthUser } from './types/AuthUser';
 import type { DayState } from './types/DayState';
 import type { FamilyContext } from './types/FamilyContext';
+import type { FoundWord } from './types/FoundWord';
 import type { History } from './types/History';
 import type { PersonalData } from './types/PersonalData';
 import type { PlayMode } from './types/PlayMode';
@@ -82,6 +83,50 @@ export function rank(): number {
  */
 export function isGenius(): boolean {
     return rank() >= GENIUS_RANK;
+}
+
+/**
+ * Returns whether the player is seeing only their own words (family play, until they choose to see everyone's).
+ *
+ * @returns True while others' words are hidden
+ */
+export function othersHidden(): boolean {
+    return !!session.family && !session.family.view.showAll;
+}
+
+/**
+ * Returns the words shown in the found-words list: every word in local play, or the ones the player sees in family
+ * play.
+ *
+ * @returns The words, in the order found
+ */
+export function shownFound(): FoundWord[] {
+    const fam = session.family;
+    if (!fam || !session.user) return session.day.found;
+    return visibleFound(session.day.found, session.user.uid, fam.view);
+}
+
+/**
+ * Returns the score shown: the player's own while others' words are hidden, otherwise today's score.
+ *
+ * @returns The score
+ */
+export function shownScore(): number {
+    return othersHidden()
+        ? scoreOf(
+              session.myDay.found.map((f) => f.w),
+              session.puzzle,
+          )
+        : score();
+}
+
+/**
+ * Returns the rank shown: the player's own while others' words are hidden, otherwise today's rank.
+ *
+ * @returns The rank's index in RANKS
+ */
+export function shownRank(): number {
+    return rankIndexFor(shownScore(), session.puzzle.maxScore);
 }
 
 /**

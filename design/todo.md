@@ -19,8 +19,6 @@ still needs doing.
 # Planned features
 
 ## Family play
-- **"Hide others' words until I find them"** (from the original plan): an option to show only counts, and reveal a
-  word with "Mom found that already" when you enter it. Not decided yet (see game-design.md, Open Questions).
 - **Stale guest members:** when a guest signs in with a Google account that already had its own data, the guest's old
   member record stays in each family (shown as a second "you"). The family's creator can remove it; the game could do
   it automatically before switching accounts.

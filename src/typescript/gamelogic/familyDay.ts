@@ -2,6 +2,7 @@ import { GENIUS_RANK } from '../data/ranks';
 import type { DayState } from '../types/DayState';
 import type { FamilyDayData } from '../types/FamilyDayData';
 import type { FamilyMember } from '../types/FamilyMember';
+import type { FamilyView } from '../types/FamilyView';
 import type { FoundWord } from '../types/FoundWord';
 import type { ImportedPuzzle } from '../types/ImportedPuzzle';
 import type { MemberContribution } from '../types/MemberContribution';
@@ -148,6 +149,35 @@ export function playerDayState(team: DayState, data: FamilyDayData, uid: string,
         hintsUsed: data.hintsUsedBy.includes(uid),
         geniusAt: geniusTime(data.found, puzzle),
     };
+}
+
+/**
+ * Returns the player's view of a day: the saved one if it is for that day, otherwise a new one (only their own words
+ * shown).
+ *
+ * @param saved - The view saved on the device, if any
+ * @param key - The day key
+ * @returns The view
+ */
+export function viewForDay(saved: FamilyView | null | undefined, key: string): FamilyView {
+    if (saved && saved.day === key && Array.isArray(saved.seen)) {
+        return { day: key, showAll: saved.showAll === true, seen: saved.seen.filter((w) => typeof w === 'string') };
+    }
+    return { day: key, showAll: false, seen: [] };
+}
+
+/**
+ * Returns the words a player sees: every word the family found, or (until they choose to see them all) only their own
+ * and the ones others found that they entered.
+ *
+ * @param found - The words the family found
+ * @param uid - The player
+ * @param view - What the player has chosen to see
+ * @returns The words shown, in the order found
+ */
+export function visibleFound(found: FoundWord[], uid: string, view: FamilyView): FoundWord[] {
+    if (view.showAll) return found;
+    return found.filter((f) => f.by === uid || view.seen.includes(f.w));
 }
 
 /**

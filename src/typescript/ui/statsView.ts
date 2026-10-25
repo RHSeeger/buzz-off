@@ -36,17 +36,19 @@ function tile(value: string, label: string): HTMLElement {
  * @param s - The all-time stats
  * @param today - Today's summary (null when it isn't for today's play, such as all families together)
  * @param team - In family play, today's score for each member
+ * @param showLongest - Whose longest word to show (the others show only its length); everyone's if not given
  * @returns The elements
  */
 function statsPanel(
     s: LifetimeStats,
     today: DaySummary | null,
     team: MemberContribution[] | null,
+    showLongest?: (uid: string) => boolean,
 ): (HTMLElement | false | null)[] {
     const max = Math.max(1, ...s.rankCounts);
     const rows = RANKS.map((r, i) => ({ name: r.name, n: s.rankCounts[i] })).reverse();
     return [
-        team && teamPanel(team),
+        team && teamPanel(team, showLongest),
         today &&
             h(
                 'section',
@@ -193,9 +195,14 @@ function badgesPanel(stats: LifetimeStats, unlocked: UnlockedAchievements): HTML
  * Makes the "Today, as a family" panel: each member's points, words, pangrams and longest word.
  *
  * @param team - Each member's share, most points first
+ * @param showLongest - Whose longest word to show (the others show only its length); everyone's if not given
  * @returns The element
  */
-function teamPanel(team: MemberContribution[]): HTMLElement {
+function teamPanel(team: MemberContribution[], showLongest: (uid: string) => boolean = () => true): HTMLElement {
+    const longest = (m: MemberContribution): string => {
+        if (!m.longest) return '–';
+        return showLongest(m.uid) ? cap(m.longest) : `${m.longest.length} letters`;
+    };
     return h(
         'section',
         {},
@@ -236,7 +243,7 @@ function teamPanel(team: MemberContribution[]): HTMLElement {
                         h('td', { class: 'num' }, String(m.points)),
                         h('td', { class: 'num' }, String(m.words)),
                         h('td', { class: 'num' }, String(m.pangrams)),
-                        h('td', {}, m.longest ? cap(m.longest) : '–'),
+                        h('td', {}, longest(m)),
                     ),
                 ),
             ),
@@ -258,6 +265,7 @@ export function showStats(options: {
         today: DaySummary | null;
         unlocked: UnlockedAchievements;
         team: MemberContribution[] | null;
+        showLongest?: (uid: string) => boolean;
     };
     tab?: 'stats' | 'badges';
 }): void {
@@ -273,7 +281,8 @@ export function showStats(options: {
             b.setAttribute('aria-selected', String(on));
             b.tabIndex = on ? 0 : -1;
         }
-        const parts = tab === 'stats' ? statsPanel(d.stats, d.today, d.team) : badgesPanel(d.stats, d.unlocked);
+        const parts =
+            tab === 'stats' ? statsPanel(d.stats, d.today, d.team, d.showLongest) : badgesPanel(d.stats, d.unlocked);
         body.replaceChildren(...parts.filter((el): el is HTMLElement => !!el));
     };
     for (const [name, label] of [

@@ -731,6 +731,16 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-
 .mode-chip .mode-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mode-chip svg { width: 16px; height: 16px; flex-shrink: 0; }
 .mode-chip.offline::after { content: "offline"; font-weight: 400; color: var(--muted); }
+.view-chip {
+  min-height: 32px;
+  padding: 0 4px;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.view-chip[hidden] { display: none; }
+.mode-row .mode-chip { min-width: 0; }
 
 .player-dot {
   display: inline-block;
