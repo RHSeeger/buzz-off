@@ -237,7 +237,7 @@ body:not(.ready) .status { visibility: hidden; }
   .wordbox .wordbox-preview, .wordbox .wordbox-chevron { display: none !important; }
   .wordbox .wordbox-head { cursor: default; pointer-events: none; }
   .wordbox .wordbox-count { display: inline !important; }
-  .hive { width: min(360px, 50dvh); }
+  .hive { width: min(290px, 42dvh); }
   .wordbox { min-height: 420px; }
 }
 
@@ -407,9 +407,10 @@ body:not(.ready) .status { visibility: hidden; }
 
 /* ---------- hive ---------- */
 
+/* Sized to match the familiar hive puzzle: about 2/3 of a phone's width, and 290px at most */
 .hive {
   position: relative;
-  width: min(78vw, 300px, 42dvh);
+  width: min(66vw, 260px, 38dvh);
   aspect-ratio: 300 / 312;
   margin: 8px auto 16px;
 }
@@ -437,7 +438,7 @@ body:not(.ready) .status { visibility: hidden; }
 .cell.center { color: var(--center-ink); }
 .cell-letter {
   position: relative;
-  font-size: clamp(1.4rem, 7vw, 1.9rem);
+  font-size: clamp(1.25rem, 6vw, 1.6rem);
   font-weight: 700;
   pointer-events: none;
   transition: opacity 0.15s;

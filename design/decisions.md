@@ -147,3 +147,13 @@ fresh. On the device because it is only about what one screen shows; keeping it 
 **Affects:** game-design.md (Family Play); code-design.md (State, Family Play); `session.ts`, `familyController.ts`,
 `app.ts`, `gamelogic/familyDay.ts`, `ui/statsView.ts`; resolves the "Hide others' words" open question
 **Status:** Active
+
+## 2026-10-25 — Firebase API key: kept in the repo, limited to the sign-in APIs
+**Decision:** The Firebase web API key stays committed in `firebaseConfig.ts`; GitHub's secret-scanning alert for it
+is closed as a false positive. The key is limited (API restrictions) to the Identity Toolkit and Token Service APIs.
+No website restrictions.
+**Why:** The key is public by design (the site serves it to every player); the security rules protect the data.
+Limiting the APIs stops it being used for other Google services; the database doesn't use it. Website restrictions
+would break `npm run check:rules`, which runs outside a browser. Checked: all 34 rules checks pass with the limit.
+**Affects:** SETUP-FIREBASE.md (Looking after it)
+**Status:** Active

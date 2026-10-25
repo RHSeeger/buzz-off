@@ -116,6 +116,16 @@ Nobody can turn this on from the game; the rules stop it.
   screen (tap the family's name above the score, then "Family members & invite link").
 - **An invite link got shared too widely:** the creator can make a new link. The old one stops working, but people
   already in the family stay in.
-- **Optional, extra safety for the API key:** in the Google Cloud console (APIs & Services → Credentials), you can
-  restrict the "Browser key" to your GitHub Pages site and `localhost`. If you do, `npm run check:rules` (which runs
-  outside a browser) will stop working until you lift the restriction.
+- **GitHub says it found a secret ("Google API Key" in `firebaseConfig.ts`):** that's the Firebase web API key from
+  step 4. It's public by design (every player's browser downloads it), so it doesn't need replacing. Close the alert
+  (the repository's Security → Secret scanning → the alert → Close as → False positive), with a note such as
+  "Firebase web API key, public by design".
+- **Recommended: limit what the API key can be used for.** In the Google Cloud console
+  (https://console.cloud.google.com/apis/credentials, signed in as the project's account), open
+  **Browser key (auto created by Firebase)**. Under **API restrictions**, choose **Restrict key**, tick
+  **Identity Toolkit API** and **Token Service API** (signing in, and renewing the sign-in), and **Save**. That's all
+  the game needs: the database doesn't use the key (it checks the player's sign-in instead). Then run
+  `npm run check:rules`, and try Google sign-in in a private window. If anything stops working, set it back to
+  **Don't restrict key**.
+- **Not recommended: website restrictions** (limiting the key to your GitHub Pages site and `localhost`).
+  `npm run check:rules` runs outside a browser, so it would stop working until you lifted the restriction.
