@@ -12,9 +12,9 @@ still needs doing.
 
 # Setup
 
-- **Set up the Firebase project** (SETUP-FIREBASE.md), fill in `src/typescript/data/firebaseConfig.ts`, run
-  `npm run check:rules`, and try family play end to end (create, invite, join on a second device, switch back and
-  forth, sign in with Google, the NYT import for a family). Family play has only been tested with Firebase mocked so far.
+- **Try family play end to end** against the real Firebase project (`buzz-off-c4a4d`; set up 2026-10-25, all 34
+  rules checks pass): create, invite, join on a second device, switch back and forth, sign in with Google, the NYT
+  import for a family.
 
 # Planned features
 

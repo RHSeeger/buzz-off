@@ -9,11 +9,11 @@
 
 /** The web app's Firebase config */
 export const FIREBASE_CONFIG = {
-    apiKey: '',
-    authDomain: '',
-    databaseURL: '',
-    projectId: '',
-    appId: '',
+    apiKey: 'AIzaSyBxavr7V1ZdizUSAB3eRXM6zyLKK7JZXvY',
+    authDomain: 'buzz-off-c4a4d.firebaseapp.com',
+    databaseURL: 'https://buzz-off-c4a4d-default-rtdb.firebaseio.com',
+    projectId: 'buzz-off-c4a4d',
+    appId: '1:458855576735:web:7087d691f7173c7b4b5eaa',
 };
 
 /** Whether family play is available (the config above has been filled in) */
