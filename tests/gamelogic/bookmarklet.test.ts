@@ -6,7 +6,7 @@ import { parsePayload, validatePayload } from '../../src/typescript/gamelogic/ny
  * Tests for the bookmarklet. Its code is run in a sandbox with a pretend NYT page.
  */
 
-/** What the NYT page is assumed to have in window.gameData.today */
+/** What the NYT page has in window.gameData.today (the field names were checked against the real page on 2026-10-24) */
 const today = {
     printDate: '2026-10-24',
     centerLetter: 'a',

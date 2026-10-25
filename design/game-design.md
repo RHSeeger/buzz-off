@@ -40,7 +40,9 @@
 - **Yesterday's Answers**: every answer, with the ones found checked, and pangrams in bold.
 - **Stats**: today, all time (played, streaks, Genius days, words, points, pangrams, average % of max, longest word),
   and how many days ended at each rank. A second tab shows the badges.
-- **Menu**: light / dark / auto; loading today's NYT puzzle (or switching back); about; erase everything.
+- **Menu**: light / dark / auto; loading today's NYT puzzle (or switching back); about; erase everything (local play
+  only; family play is kept with the family).
+- **Who are you playing with?** (the button above the score): see Family Play.
 
 ## Streaks
 
@@ -70,7 +72,54 @@
   for a different date.
 - Which puzzle is played can only change until the first word is found; after that the day is locked in.
 - The bookmarklet is made for whichever site the game is running on, so other deployments point at themselves.
-- Nothing is fetched automatically, and no NYT data is ever stored anywhere but the player's own device.
+- Nothing is fetched automatically, and no NYT data is ever stored anywhere but the player's own device, or (in family
+  play) with that family, where only its members can read it.
+- In family play the NYT import is only offered to families it has been turned on for, by hand in the Firebase console
+  (see SETUP-FIREBASE.md). For such a family, before anything is found, the welcome screen asks which puzzle to play.
+  Choosing the NYT one tells the others ("Mom is loading the NYT puzzle (started 8:12am)") so they can wait, or play
+  ours instead. Once loaded, everyone's game switches to it.
+
+## Family Play
+
+Family play needs a Firebase project (SETUP-FIREBASE.md). Until one is set up, the game only plays locally.
+
+- **Who you're playing with:** the button above the score says "Just me" or the family's name. Tapping it lists
+  "Just me" and every family you're in, to switch between them. The choice is kept, every day, until you switch.
+- **Local and family games are separate.** Switching doesn't move or merge words: playing "Just me" in the morning
+  and with the family later is two games.
+- **One shared game per family:** everyone plays the same puzzle each day (the day changes at midnight in the
+  family's timezone, the creator's), with one list of found words. Each word counts for whoever found it first; new
+  words appear for everyone straight away. "Already found (by Mom)" says who beat you to it.
+- **Who found what:** each found word has a dot in its finder's color, the progress bar is split by player color, and
+  the Stats screen shows each member's points, words, pangrams and longest word today. Yesterday's Answers shows who
+  found each word.
+- **Ranks and celebrations** are the family's: when the family reaches Genius, everyone gets the celebration.
+- **Creating a family:** "Create a family" asks for the family's name, and your name and color, then shows the
+  invite link to share.
+- **Joining:** opening an invite link (`<game>#join=<family>:<code>`) asks for your name and color. You stay a member
+  until you leave or are removed, so switching back later doesn't need the link again. A link can also be pasted into
+  the "Who are you playing with?" screen.
+- **The family screen** (from "Who are you playing with?"): members, the invite link (any member can share it), your
+  name and color, and leaving. The family's creator can also remove members, make a new link (old links stop working),
+  and delete the family.
+- **Signing in:** you play as a guest at first (no account needed; the families are tied to that browser). "Sign in
+  with Google" keeps your families, family history and badges with your Google account, so they're on every device you
+  sign in on. A guest who signs in keeps everything. (If that Google account had already been used, the guest's
+  history and badges are added to it, and their families rejoined if the invite codes still work.)
+- **Offline:** words found while offline show straight away, and are sent when the connection comes back, as long as
+  the game stays open. The button above the score says "offline" meanwhile.
+
+## Stats and Badges in Family Play
+
+- The Stats screen has a list of whose stats to show:
+    - **Just me (this device):** local play.
+    - **Me, with <family>:** your play in that family: the words *you* found, with the family's rank for the day (so
+      a Genius day is a day the family reached Genius and you played). For the current family, it also shows today's
+      members' table.
+    - **Me, in all my families** (with 2 or more families): your play in every family added up, day by day.
+- Badges are earned and kept separately for each of those, by the same rules. A badge earned for a family and for
+  "all families" at once pops up once.
+- Local play's stats stay on the device; family stats are kept with your account (on every device you sign in on).
 
 ## Installable App
 
@@ -79,5 +128,5 @@
 
 ## Open Questions
 
-- Do the NYT page's field names (`window.gameData.today`: `printDate`, `centerLetter`, `outerLetters`, `pangrams`,
-  `answers`) match what the bookmarklet expects? Not verified yet.
+- Should there be an option to "Hide others' words until I find them" (showing only counts, and revealing a word with
+  "Mom found that already" when you enter it)? It was in the original plan; not built yet (see todo.md).

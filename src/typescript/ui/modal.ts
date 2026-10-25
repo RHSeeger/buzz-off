@@ -78,7 +78,7 @@ export function openModal({ title, content, onClose, variant = '', hideTitle = f
         { class: `modal-card ${variant}`, role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId },
         closeBtn,
         h('h2', { id: titleId, class: `modal-title${hideTitle ? ' visually-hidden' : ''}` }, title),
-        h('div', { class: 'modal-body' }, Array.isArray(content) ? content : [content]),
+        h('div', { class: 'modal-body' }, content),
     );
     const root = h('div', { class: `modal-backdrop ${variant}` }, card);
     root.addEventListener('click', (e) => {

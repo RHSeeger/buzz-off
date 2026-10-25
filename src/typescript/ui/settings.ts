@@ -38,15 +38,17 @@ async function copyText(text: string): Promise<void> {
 /**
  * Opens the Menu screen.
  *
- * @param options - The current theme, today's play, whether today is locked in, and what the menu can ask for
+ * @param options - The current theme, today's play, whether today is locked in, whether the NYT import is allowed (in
+ *   family play, only for families it's turned on for), and what the menu can ask for
  */
 export function showSettings(options: {
     theme: Theme;
     day: DayState;
     locked: boolean;
+    nytAllowed: boolean;
     actions: SettingsActions;
 }): void {
-    const { theme, day, locked, actions } = options;
+    const { theme, day, locked, nytAllowed, actions } = options;
     const themeRow = h('div', { class: 'segmented', role: 'radiogroup', 'aria-label': 'Theme' });
     for (const [value, label] of THEMES) {
         const btn = h('button', { type: 'button', role: 'radio', 'aria-checked': String(theme === value) }, label);
@@ -75,31 +77,34 @@ export function showSettings(options: {
                     : "Today you're playing the generated puzzle.",
             ),
             locked
-                ? h('p', { class: 'muted small' }, "You've found a word, so today's puzzle is locked in.")
-                : h(
-                      'div',
-                      { class: 'button-row' },
-                      day.source === 'nyt'
-                          ? h(
-                                'button',
-                                {
-                                    class: 'pill',
-                                    type: 'button',
-                                    onclick: () => {
-                                        actions.useGenerated();
-                                        closeModal();
-                                    },
-                                },
-                                'Play the generated puzzle instead',
-                            )
-                          : h(
-                                'button',
-                                { class: 'pill', type: 'button', onclick: () => showNytImport(actions) },
-                                "Load today's NYT puzzle",
-                            ),
-                  ),
+                ? h('p', { class: 'muted small' }, "A word has been found, so today's puzzle is locked in.")
+                : !nytAllowed && day.source !== 'nyt'
+                  ? h('p', { class: 'muted small' }, "The NYT puzzle import isn't turned on for this family.")
+                  : h(
+                        'div',
+                        { class: 'button-row' },
+                        day.source === 'nyt'
+                            ? h(
+                                  'button',
+                                  {
+                                      class: 'pill',
+                                      type: 'button',
+                                      onclick: () => {
+                                          actions.useGenerated();
+                                          closeModal();
+                                      },
+                                  },
+                                  'Play the generated puzzle instead',
+                              )
+                            : h(
+                                  'button',
+                                  { class: 'pill', type: 'button', onclick: () => showNytImport(actions) },
+                                  "Load today's NYT puzzle",
+                              ),
+                    ),
             day.source !== 'nyt' &&
                 !locked &&
+                nytAllowed &&
                 h('p', { class: 'muted small' }, 'Loading the NYT puzzle requires a quick manual step.'),
             h('h3', {}, 'About'),
             h(

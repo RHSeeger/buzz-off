@@ -8,7 +8,8 @@ import { letterStrip } from './hints';
 import { openModal } from './modal';
 
 /**
- * The Yesterday's Answers screen: every answer to yesterday's puzzle, with the ones the player found checked.
+ * The Yesterday's Answers screen: every answer to yesterday's puzzle, with the ones found checked (in family play,
+ * with a dot in the finder's color).
  */
 
 /**
@@ -17,12 +18,19 @@ import { openModal } from './modal';
  * @param key - Yesterday's day key
  * @param day - Yesterday's play
  * @param puzzle - Yesterday's puzzle
+ * @param finders - In family play, each found word's finder
  */
-export function showYesterday(key: string, day: DayState, puzzle: Puzzle): void {
+export function showYesterday(
+    key: string,
+    day: DayState,
+    puzzle: Puzzle,
+    finders?: Record<string, { name: string; color: string }>,
+): void {
     const found = new Set(day.found.map((f) => f.w));
     const score = scoreOf(found, puzzle);
     const rank = RANKS[rankIndexFor(score, puzzle.maxScore)].name;
     const pangramCount = puzzle.pangrams.length;
+    const who = finders ? 'Nobody' : 'You';
     openModal({
         title: "Yesterday's Answers",
         content: [
@@ -37,25 +45,40 @@ export function showYesterday(key: string, day: DayState, puzzle: Puzzle): void 
                           ` words · ${score} of ${puzzle.maxScore} points · `,
                           h('b', {}, rank),
                       ]
-                    : `You didn't play this one. It had ${puzzle.answers.length} words and ${pangramCount} ` +
+                    : `${who} didn't play this one. It had ${puzzle.answers.length} words and ${pangramCount} ` +
                           `pangram${pangramCount === 1 ? '' : 's'}.`,
             ),
             h(
                 'ul',
                 { class: 'answer-list' },
-                puzzle.answers.map((w) =>
-                    h(
+                puzzle.answers.map((w) => {
+                    const finder = finders?.[w];
+                    const cls = `${found.has(w) ? 'found' : 'missed'}${puzzle.pangrams.includes(w) ? ' pangram' : ''}`;
+                    return h(
                         'li',
                         {
-                            class: `${found.has(w) ? 'found' : 'missed'}${puzzle.pangrams.includes(w) ? ' pangram' : ''}`,
+                            class: `${cls}${finder ? ' by-player' : ''}`,
+                            title: finder ? `Found by ${finder.name}` : null,
                         },
-                        h('span', { class: 'check', 'aria-hidden': 'true' }, found.has(w) ? '✓' : ''),
+                        finder
+                            ? h('span', { class: `player-dot player-${finder.color}`, 'aria-hidden': 'true' })
+                            : h('span', { class: 'check', 'aria-hidden': 'true' }, found.has(w) ? '✓' : ''),
                         cap(w),
-                        h('span', { class: 'visually-hidden' }, found.has(w) ? ' (found)' : ' (missed)'),
-                    ),
-                ),
+                        h(
+                            'span',
+                            { class: 'visually-hidden' },
+                            finder ? ` (found by ${finder.name})` : found.has(w) ? ' (found)' : ' (missed)',
+                        ),
+                    );
+                }),
             ),
-            h('p', { class: 'muted small' }, 'Bold words are pangrams. Words with a check are ones you found.'),
+            h(
+                'p',
+                { class: 'muted small' },
+                finders
+                    ? "Bold words are pangrams. A dot shows who found the word; words with no dot weren't found."
+                    : 'Bold words are pangrams. Words with a check are ones you found.',
+            ),
         ],
     });
 }

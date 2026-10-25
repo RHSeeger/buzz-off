@@ -10,24 +10,25 @@ still needs doing.
 
 ---
 
+# Setup
+
+- **Set up the Firebase project** (SETUP-FIREBASE.md), fill in `src/typescript/data/firebaseConfig.ts`, run
+  `npm run check:rules`, and try family play end to end (create, invite, join on a second device, switch back and
+  forth, sign in with Google, the NYT import for a family). Family play has only been tested with Firebase mocked so far.
+
 # Planned features
 
-## Family mode (Firebase)
-From the original plan (phase 2), not started:
-- Firebase init with the web config in `data/app.ts`; Google sign-in with `signInWithPopup` (not redirect).
-- Create a family; invite by link (`#join=<fid>:<code>`); join with a display name and color; family switcher.
-- Shared found words in Realtime Database, each credited to whoever found it first, with live updates; the progress
-  bar split by player color; per-player stats; "Already found (by Mom)".
-- Families have their own timezone for the day boundary.
-- Security rules, with emulator tests; `SETUP-FIREBASE.md` for setting up the project.
-- Option: "Hide others' words until I find them".
-- NYT import for families: only for families enabled by hand (`admin/nytFamilies/<fid>`), with a choice screen and
-  "Mom is loading the NYT puzzle" while someone is fetching it.
-
-## NYT import
-- **Check the bookmarklet against the real NYT page.** Open the puzzle in a desktop browser and run
-  `JSON.stringify(Object.keys(window.gameData.today))` in the console; adjust the bookmarklet if the names differ.
+## Family play
+- **"Hide others' words until I find them"** (from the original plan): an option to show only counts, and reveal a
+  word with "Mom found that already" when you enter it. Not decided yet (see game-design.md, Open Questions).
+- **Stale guest members:** when a guest signs in with a Google account that already had its own data, the guest's old
+  member record stays in each family (shown as a second "you"). The family's creator can remove it; the game could do
+  it automatically before switching accounts.
 
 ## Testing on phones
 - Test sign-in-free play, adding to the home screen, offline play and the update toast on an iPhone and an Android
   phone.
+- Test Google sign-in inside the home-screen app on iOS (its storage is separate from Safari's; the popup may not
+  work there). If it fails, the game says to use the browser instead; check that message makes sense.
+- Try the NYT bookmarklet end to end on an iPhone and an Android phone (the page's field names are confirmed, but the
+  whole flow hasn't been run on a phone yet).

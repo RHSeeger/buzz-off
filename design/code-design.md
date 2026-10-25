@@ -10,7 +10,10 @@ src/
     manifest.webmanifest
   typescript/
     index.ts          Startup: imports the CSS and calls startApp()
-    app.ts            The game session: owns the current state, handles input, keeps the screen up to date
+    app.ts            The game: handles input, keeps the screen up to date, plays locally, starts everything
+    familyController.ts  Family play: switching modes, following a family's day live, create/join, sign-in,
+                      the player's family history and badges
+    session.ts        The session's state (shared by app.ts and familyController.ts), and small calculations on it
     serviceWorker.ts  Built separately, to dist/sw.js (offline play)
     global.d.ts       Additions to global types (`__BUILD_VERSION__`, CSS imports)
     types/            Plain-data types only, one per file (Puzzle, DayState, DaySummary, LifetimeStats, ...)
@@ -26,22 +29,37 @@ src/
       wordlist.ts         Loading the word list; letter masks
       prng.ts             Seeded random numbers (shared with the build tools)
       storage.ts          try/catch-wrapped localStorage
+      familyDay.ts        A family's day: reading Firebase's data, the family's and one player's view, who found what
+      personal.ts         The player's Firebase data (families, family history, badges); adding histories together
+      invites.ts          Invite codes and #join= links
+    family/           Everything that talks to Firebase (loaded with import() only when family play is used):
+      firebase.ts         Connecting, signing in (guest or Google)
+      families.ts         Creating, joining, leaving, deleting families; members; invite codes
+      familyDayStore.ts   A family's day: watching it, adding words, choosing the puzzle, hints, NYT puzzle
+      personalStore.ts    The player's own data
+      api.ts              Re-exports them all (the module that is loaded)
     ui/               Drawing and screens: the honeycomb, progress track, found-words box, modals, toasts, and each
                       screen (help, rankings, hints, yesterday, stats, settings, splash)
-tools/              Node build tools (TypeScript, run through tools/run.cjs): build-wordlist.ts, make-icons.ts
+tools/              Node build tools (TypeScript, run through tools/run.cjs): build-wordlist.ts, make-icons.ts, and
+                    check-rules.ts (checks the security rules against the real Firebase project)
 tests/              Jest tests, mirroring src/typescript (plus tests/tools)
+database.rules.json The Firebase security rules (pasted into the Firebase console; see SETUP-FIREBASE.md)
 ```
 
 - Any code may import from `types/` and `data/`. Neither of them imports from `gamelogic/` or `ui/`.
 - `ui/` imports from `gamelogic/` only for calculations it displays (ranks, hints, dates); it never changes saved
-  state. Only `app.ts` changes the game's state and saves it.
+  state. Only `app.ts` and `familyController.ts` change the game's state and save it.
+- Only `family/` imports Firebase. `familyController.ts` loads it with `import()`, so players who only play locally
+  never download it; webpack puts it in its own file.
+- `familyController.ts` doesn't import `app.ts`: it asks the game to redraw (and so on) through `FamilyHooks`.
 - Tests in `/tests` mirror this layout.
 
 
 ## State
 
-- The session's state (today's day and puzzle, the words found, the history, the badges, the typed word, the theme)
-  lives in `app.ts`. Nothing else holds game state.
+- The session's state (who the player is playing with, today's day and puzzle, the words found, the history, the
+  badges, the typed word, the theme, and in family play the family and the player's Firebase data) lives in
+  `session.ts`. Nothing else holds game state.
 - Everything is **plain data** that survives JSON, apart from the `Puzzle`, which is rebuilt from the day each time
   (it is never saved): its answers are computed from the word list, or come from the imported puzzle stored with the
   day.
@@ -50,10 +68,40 @@ tests/              Jest tests, mirroring src/typescript (plus tests/tools)
     - `history` - a `DaySummary` per day played, for the stats and badges
     - `achievements` - when each badge was earned
     - `theme` - the light/dark choice
+    - `mode` - who the player is playing with (`PlayMode`), kept until they switch
+    - `profile` - the name and color last used in a family (the default for the next one)
+    - `inviteCodes` - the invite code used for each family, so a guest's families can be rejoined after signing in
+      with a Google account that already had its own
+    - `usedFamily` - whether family play has been used here (if not, Firebase isn't loaded at all)
 - Values that can be worked out (score, rank, all-time stats) are **not** stored; they are calculated when needed.
   (`history` is the exception: it is a cache of each day's summary, so the stats don't need every day's puzzle rebuilt.)
 - Every storage access is wrapped in try/catch: the game must work, without remembering anything, when storage is
   unavailable.
+
+
+## Family Play (Firebase)
+
+- Two kinds of play: **local** (saved in localStorage, as above) and **family** (saved in Firebase Realtime Database,
+  shared by the family). They are separate games: switching doesn't move or merge words.
+- Signing in: every family player is a Firebase user. They start as a guest (anonymous; tied to the browser), and can
+  sign in with Google (popup, not redirect) to keep their families on every device. A guest who signs in keeps their
+  user id; if the Google account was already used, the guest's history and badges are merged into it and their families
+  rejoined with the saved invite codes.
+- Firebase data (the rules in `database.rules.json` enforce who can do what):
+    - `families/<fid>/meta` - name, owner, timezone, created (written once; only the owner can delete the family)
+    - `families/<fid>/members/<uid>` - name, color, joined, and the invite code they joined with (checked by the rules)
+    - `families/<fid>/days/<day>` - `source`, `nyt`, `pendingNyt`, `found/<word>: { by, at }`, `hints/<uid>`. The source
+      can only change while nothing is found; a word can only be written once, so the first finder gets the credit; the
+      first word and `source: 'generated'` are written together
+    - `invites/<fid>` - the invite code (members can read it, so anyone can invite; only the owner can change it)
+    - `admin/nytFamilies/<fid>` - `true` turns on the NYT import for a family (set by hand in the console only)
+    - `users/<uid>` - the player's own: `families` (their list), `history/<fid>/<day>` (a `DaySummary` of the words
+      *they* found, with the *family's* rank), `achievements/<scope>` (`<fid>` or `all`)
+- A family's day is the date in the family's timezone (the creator's), so everyone plays the same puzzle.
+- The game follows the family's day live (`onValue`). Its own writes show at once, even offline; Firebase sends them
+  when it reconnects (if the page stays open).
+- Stats and badges have three scopes: local play, the player in one family, and the player in all their families
+  (their family histories added up, day by day). Badges are earned and kept separately for each.
 
 
 ## The Daily Puzzle
@@ -68,8 +116,10 @@ tests/              Jest tests, mirroring src/typescript (plus tests/tools)
 
 ## Build and Deploy
 
-- `npm run build` type-checks, then webpack builds `dist/`: `index.html`, `app.bundle.js` (with the CSS), `sw.js`, and
-  everything in `src/static/` (copied by a small plugin in `webpack.config.js`).
+- `npm run build` type-checks, then webpack builds `dist/` in production mode (minified): `index.html`,
+  `app.bundle.js` (with the CSS), the Firebase code as separate `*.chunk.js` files, `sw.js`, and everything in
+  `src/static/` (copied by a small plugin in `webpack.config.js`). `npm start` runs the dev server in development mode.
+- ts-loader compiles to ES modules (not tsconfig's CommonJS, which Jest uses), so webpack can split out `import()`.
 - The service worker's cache is named after the build (`__BUILD_VERSION__`), so each deploy installs a new worker and
   the page offers "Update available — Reload". It is skipped on localhost unless the address has `?sw`.
 - All paths are relative, so the site works under `https://<user>.github.io/<repo>/`.

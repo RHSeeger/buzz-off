@@ -38,7 +38,11 @@ class CopyStaticFilesPlugin {
     }
 }
 
-export default {
+/**
+ * The build. `npm run build` passes --mode production (small, for deploying); `npm start` runs in development mode
+ * (readable, with inline source maps).
+ */
+export default (env, argv) => ({
     entry: {
         app: __dirname + '/src/typescript/index.ts',
         // The service worker must be its own file at the site root, so it can control the whole site
@@ -46,6 +50,8 @@ export default {
     },
     output: {
         filename: (pathData) => (pathData.chunk.name === 'sw' ? 'sw.js' : 'app.bundle.js'),
+        // Parts loaded only when needed (family play's Firebase code)
+        chunkFilename: '[name].[contenthash:8].chunk.js',
         path: path.resolve(__dirname, 'dist'), // Output directory
         clean: true, // Clean the output directory before each build
     },
@@ -69,7 +75,9 @@ export default {
         rules: [
             {
                 test: /\.tsx?$/, // Apply this rule to .ts and .tsx files
-                use: 'ts-loader', // Use ts-loader to transpile TypeScript
+                // Use ts-loader to transpile TypeScript. ES modules (rather than tsconfig's CommonJS, which the tests use)
+                // let webpack split out code loaded with import(), and drop unused code
+                use: { loader: 'ts-loader', options: { compilerOptions: { module: 'es2020' } } },
                 exclude: /node_modules/, // Exclude dependencies
             },
             {
@@ -82,12 +90,12 @@ export default {
             },
         ],
     },
-    mode: 'development',
-    devtool: 'inline-source-map',
+    mode: argv.mode === 'production' ? 'production' : 'development',
+    devtool: argv.mode === 'production' ? 'source-map' : 'inline-source-map',
     devServer: {
         static: path.resolve(__dirname, 'dist'), // Serve static files from the 'dist' directory
         port: 3000, // Serve the app on http://localhost:3000
         host: '0.0.0.0', // Also reachable from phones on the same network (http://<this computer's IP>:3000)
         open: true, // Automatically open the browser when the server starts
     },
-};
+});

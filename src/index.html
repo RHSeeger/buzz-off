@@ -29,12 +29,17 @@
 
     <main class="game">
       <section class="status" aria-label="Progress">
+        <div class="mode-row"><button id="mode-chip" class="mode-chip" type="button" aria-label="Who you are playing with"></button></div>
         <button id="progress" class="progress" type="button"></button>
-        <div id="wordbox" class="wordbox"></div>
+        <div class="wordbox-slot"><div id="wordbox" class="wordbox"></div></div>
       </section>
 
       <section class="play" aria-label="Puzzle">
         <div id="loading" class="loading">Loading today's puzzle…</div>
+        <div id="connecting" class="connecting" role="status" hidden>
+          <p id="connecting-text"></p>
+          <button id="btn-play-local" class="pill" type="button">Play on my own instead</button>
+        </div>
         <div id="message" class="message" aria-live="assertive" role="status"></div>
         <div id="input" class="input empty" aria-live="polite">
           <span id="input-text" class="input-text"></span><span class="cursor" aria-hidden="true"></span>

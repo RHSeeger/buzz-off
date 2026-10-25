@@ -4,7 +4,8 @@ import type { Wordbox } from '../types/Wordbox';
 import { cap, clear, h, icon } from './dom';
 
 /**
- * The rank progress track (the rank's name, a dot for each rank, and the score), and the found-words box.
+ * The rank progress track (the rank's name, a dot for each rank, and the score), and the found-words box. In family
+ * play, the filled part of the track is split by who scored the points, and each word has a dot in its finder's color.
  */
 
 /**
@@ -13,8 +14,14 @@ import { cap, clear, h, icon } from './dom';
  * @param el - The progress button (its contents are replaced)
  * @param score - The score so far
  * @param maxScore - The puzzle's maximum score
+ * @param shares - In family play, each player's color and points, to split the filled part by
  */
-export function renderProgress(el: HTMLElement, score: number, maxScore: number): void {
+export function renderProgress(
+    el: HTMLElement,
+    score: number,
+    maxScore: number,
+    shares: { color: string; points: number }[] = [],
+): void {
     const idx = rankIndexFor(score, maxScore);
     const t = rankThresholds(maxScore);
     const last = RANKS.length - 1;
@@ -32,13 +39,19 @@ export function renderProgress(el: HTMLElement, score: number, maxScore: number)
             style: { left: `${(i / last) * 100}%` },
         }),
     );
+    const scored = shares.filter((s) => s.points > 0);
+    const fill = h(
+        'span',
+        { class: `track-fill${scored.length ? ' split' : ''}`, style: { width: `${pct}%` } },
+        scored.map((s) => h('span', { class: `player-${s.color}`, style: { flexGrow: String(s.points) } })),
+    );
     el.append(
         h('span', { class: 'rank-name' }, RANKS[idx].name),
         h(
             'span',
             { class: 'track' },
             h('span', { class: 'track-line' }),
-            h('span', { class: 'track-fill', style: { width: `${pct}%` } }),
+            fill,
             dots,
             h('span', { class: 'track-marker', style: { left: `${pct}%` } }, String(score)),
         ),
@@ -80,17 +93,30 @@ export function createWordbox(el: HTMLElement): Wordbox {
 
     return {
         close: () => setOpen(false),
-        render(found: string[], puzzle, highlight?: string): void {
+        render(found, puzzle, highlight, finders): void {
             const n = found.length;
             count.textContent = n === 0 ? 'Your words…' : `You have found ${n} word${n === 1 ? '' : 's'}`;
+            if (finders && n > 0) count.textContent = `Your family has found ${n} word${n === 1 ? '' : 's'}`;
             clear(preview);
             for (const w of found.slice(-8).reverse()) {
                 preview.append(h('span', { class: puzzle.pangrams.includes(w) ? 'pangram' : '' }, cap(w)));
             }
             clear(list);
             for (const w of [...found].sort()) {
+                const finder = finders?.[w];
                 const cls = `${puzzle.pangrams.includes(w) ? 'pangram' : ''}${w === highlight ? ' fresh' : ''}`;
-                list.append(h('li', { class: cls }, cap(w)));
+                list.append(
+                    h(
+                        'li',
+                        {
+                            class: `${cls}${finder ? ' by-player' : ''}`,
+                            title: finder ? `Found by ${finder.name}` : null,
+                        },
+                        finder && h('span', { class: `player-dot player-${finder.color}`, 'aria-hidden': 'true' }),
+                        cap(w),
+                        finder && h('span', { class: 'visually-hidden' }, ` (found by ${finder.name})`),
+                    ),
+                );
             }
         },
     };

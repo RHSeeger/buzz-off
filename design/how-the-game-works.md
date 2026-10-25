@@ -50,3 +50,24 @@ plays it instead of the generated puzzle. That's only allowed until the first wo
 
 A service worker keeps a copy of the game's files. After the first visit, the game opens without a connection. Each
 new build gets a new copy, and the game offers to reload when one is ready.
+
+## Playing with a family
+
+Family play keeps each family's game in Firebase, a database run by Google that the game talks to directly from the
+browser (there's still no server of our own).
+
+Each family has a record holding its name, its members, and one entry per day with the words found. Every word is
+stored with who found it and when. When anyone finds a word, the game writes it there, and every family member's game
+is told straight away and redraws. Firebase's security rules (`database.rules.json`) decide who may do what: only
+members can see the family, joining needs the current invite code, a word can only be written once (so the first
+finder keeps the credit), and today's puzzle can't be changed once a word is found.
+
+Each player is a Firebase "user". At first that's a guest account that lives in the browser, so no sign-up is needed.
+Signing in with Google turns the guest into a Google account, which works on any device.
+
+For stats, each player also has their own record in Firebase: the list of their families, a summary of each day they
+played in each family (counting the words *they* found, with the family's rank), and their badges. The "all my
+families" stats add up the summaries from every family, day by day.
+
+An invite link is the game's address with `#join=<family id>:<invite code>` on the end. Like the NYT data, the part
+after `#` never reaches a server, and the game removes it from the address as soon as it has read it.

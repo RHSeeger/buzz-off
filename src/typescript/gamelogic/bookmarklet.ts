@@ -2,8 +2,9 @@
  * Makes the bookmarklet that copies today's NYT puzzle into this game. It points at whatever deployment made it, so
  * forks and other deployments point at themselves.
  *
- * NOTE: the window.gameData.today field names it reads (printDate, centerLetter, outerLetters, pangrams, answers) are
- * unverified assumptions about the NYT page.
+ * It reads window.gameData.today on the NYT page: printDate, centerLetter, outerLetters, pangrams and answers (field
+ * names checked against the real page on 2026-10-24; it also has displayWeekday, displayDate, validLetters, id,
+ * freeExpiration and editor, which aren't used).
  *
  * Rules for SOURCE: every statement ends in ';' and there are no comments, because its lines are joined with no
  * newline (bookmarks are a single line). It also avoids a literal '#' or '%' (bookmark addresses mangle them); '\x23' is

@@ -9,8 +9,8 @@ You are an expert developer
 
 Buzz Off is a daily word puzzle built with **TypeScript** (strict mode), **HTML**, and **CSS**: find words made from 7
 letters, each containing the center letter. It has ranks, hints, stats, streaks and badges, works offline as an
-installable web app, and can optionally load the day's NYT puzzle through a bookmarklet. A family (shared, multiplayer)
-mode using Firebase is planned but not built.
+installable web app, and can optionally load the day's NYT puzzle through a bookmarklet. Players can play on their own
+(saved in the browser) or with a family (a shared game, saved in Firebase Realtime Database; see SETUP-FIREBASE.md).
 
 ## Technologies Used
 
@@ -18,7 +18,9 @@ mode using Firebase is planned but not built.
 - **HTML5**
 - **CSS3**
 - **Webpack** for bundling assets
-- **Node** for the build tools (word list and icons) and tests only; the game has no runtime dependencies
+- **Firebase** (the `firebase` npm package: Auth and Realtime Database) for family play; the game's only runtime
+  dependency, loaded only when family play is used
+- **Node** for the build tools (word list, icons, rules check) and tests only
 
 
 ## Project Structure
@@ -37,6 +39,7 @@ mode using Firebase is planned but not built.
 - Fix Style: `npm run lint:fix` (automatically fixes what it can)
 - Rebuild the word and puzzle lists: `npm run build:words` (changes answers; see design/decisions.md first)
 - Rebuild the icons: `npm run build:icons`
+- Check the Firebase security rules against the real project: `npm run check:rules` (needs the Firebase config filled in)
 
 ## Code Style Instructions
 - Use TypeScript strict mode
@@ -100,6 +103,7 @@ mode using Firebase is planned but not built.
 - Installing packages
 - Deleting files
 - Anything that adds a service, or could cost money
+- Changing `database.rules.json` (it protects the families' data; run `npm run check:rules` after publishing a change)
 
 ### Never
 - Interacting with git / github (I want to do with manually for now)

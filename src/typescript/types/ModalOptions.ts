@@ -1,3 +1,5 @@
+import type { DomChild } from './DomChild';
+
 /**
  * Defines the ModalOptions type: what a modal (a screen shown over the game) contains.
  */
@@ -9,7 +11,7 @@ export type ModalOptions = {
     /** The heading */
     title: string;
     /** The body */
-    content: Node | (Node | null | false | undefined)[];
+    content: DomChild;
     /** Called after it closes */
     onClose?: () => void;
     /** A styling variant: '' (a card), 'splash' (the full-screen welcome) or 'celebrate' */
