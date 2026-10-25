@@ -550,6 +550,9 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-
 .logo .logo-c { fill: #121212; }
 .splash-tag { font-family: var(--font-display); font-size: 1.5rem; max-width: 18em; margin: 0 0 12px !important; }
 .modal-card.splash .pill.primary { background: #121212; color: #fff; border-color: #121212; }
+/* The splash is yellow with dark text in both themes, so its other buttons are too (not the dark theme's surface) */
+.modal-card.splash .pill:not(.primary) { background: #fff; color: #121212; border-color: #121212; }
+.modal-card.splash .pill:not(.primary):active { background: #f4f4f4; }
 .splash-streak { font-weight: 600; }
 .splash-yesterday { border-top: 1px solid rgba(0, 0, 0, 0.2); padding-top: 12px; margin-top: 8px; }
 .splash-yesterday p { margin: 0 0 4px; }
