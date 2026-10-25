@@ -233,7 +233,7 @@ body:not(.ready) .status { visibility: hidden; }
   .play { flex: 1; justify-content: flex-start; padding-top: 60px; }
   .wordbox-slot { flex: 1; display: flex; flex-direction: column; }
   .wordbox { flex: 1; }
-  .wordbox .wordbox-list { display: grid !important; }
+  .wordbox .wordbox-list { display: block !important; }
   .wordbox .wordbox-preview, .wordbox .wordbox-chevron { display: none !important; }
   .wordbox .wordbox-head { cursor: default; pointer-events: none; }
   .wordbox .wordbox-count { display: inline !important; }
@@ -320,16 +320,18 @@ body:not(.ready) .status { visibility: hidden; }
 .wordbox-chevron svg { width: 20px; height: 20px; }
 .wordbox.open .wordbox-chevron { transform: rotate(180deg); }
 
+/* Columns are filled top to bottom, then left to right (alphabetical down each column) */
 .wordbox-list {
   display: none;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0 16px;
+  columns: 120px;
+  column-gap: 16px;
   list-style: none;
   margin: 0;
   padding: 4px 16px 16px;
 }
-.wordbox.open .wordbox-list { display: grid; }
+.wordbox.open .wordbox-list { display: block; }
 .wordbox-list li {
+  break-inside: avoid;
   padding: 6px 0;
   border-bottom: 1px solid var(--line);
   overflow-wrap: anywhere;
