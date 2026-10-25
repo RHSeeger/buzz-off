@@ -40,7 +40,8 @@
 - **Yesterday's Answers**: every answer, with the ones found checked, and pangrams in bold.
 - **Stats**: today, all time (played, streaks, Genius days, words, points, pangrams, average % of max, longest word),
   and how many days ended at each rank. A second tab shows the badges.
-- **Menu**: light / dark / auto; loading today's NYT puzzle (or switching back); about; erase everything (local play
+- **Menu**: light / dark / auto; loading today's NYT puzzle (or switching back) before the first word, and setting up
+  the NYT bookmarklet at any time; about; erase everything (local play
   only; family play is kept with the family).
 - **Who are you playing with?** (the button above the score): see Family Play.
 

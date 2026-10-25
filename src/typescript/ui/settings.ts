@@ -77,7 +77,25 @@ export function showSettings(options: {
                     : "Today you're playing the generated puzzle.",
             ),
             locked
-                ? h('p', { class: 'muted small' }, "A word has been found, so today's puzzle is locked in.")
+                ? [
+                      h('p', { class: 'muted small' }, "A word has been found, so today's puzzle is locked in."),
+                      nytAllowed &&
+                          h(
+                              'div',
+                              { class: 'button-row' },
+                              h(
+                                  'button',
+                                  { class: 'pill', type: 'button', onclick: () => showNytImport(actions, true) },
+                                  'Set up the NYT puzzle bookmarklet',
+                              ),
+                          ),
+                      nytAllowed &&
+                          h(
+                              'p',
+                              { class: 'muted small' },
+                              'You can set it up now, and use it on a day you haven’t started yet.',
+                          ),
+                  ]
                 : !nytAllowed && day.source !== 'nyt'
                   ? h('p', { class: 'muted small' }, "The NYT puzzle import isn't turned on for this family.")
                   : h(
@@ -137,11 +155,12 @@ export function showSettings(options: {
 
 /**
  * Opens the screen explaining how to load the NYT puzzle: setting up the bookmarklet, using it each day, and a box to
- * paste the puzzle data into instead.
+ * paste the puzzle data into instead. When today is locked in, it is just the setup (for a day not started yet).
  *
  * @param actions - What the screen can ask for (loading the pasted data)
+ * @param locked - Whether today's puzzle is locked in (a word has been found)
  */
-export function showNytImport(actions: SettingsActions): void {
+export function showNytImport(actions: SettingsActions, locked = false): void {
     const href = bookmarkletHref(currentGameUrl());
     const copyBtn = h(
         'button',
@@ -169,8 +188,15 @@ export function showNytImport(actions: SettingsActions): void {
     const code = (text: string): HTMLElement => h('code', {}, text);
 
     openModal({
-        title: "Load today's NYT puzzle",
+        title: locked ? 'The NYT puzzle bookmarklet' : "Load today's NYT puzzle",
         content: [
+            locked &&
+                h(
+                    'p',
+                    { class: 'lead' },
+                    "A word has been found today, so today's puzzle can't change. Set the bookmarklet up now, and use it " +
+                        'before finding your first word on another day.',
+                ),
             h('h3', {}, 'One-time setup'),
             copyBtn,
             h(
@@ -236,23 +262,24 @@ export function showNytImport(actions: SettingsActions): void {
                 h('li', {}, 'Run the ', code('nytbee'), ' bookmark.'),
                 h('li', {}, 'This game reopens with the puzzle loaded.'),
             ),
-            h('h3', {}, 'Or paste puzzle data'),
-            paste,
-            h(
-                'div',
-                { class: 'button-row' },
+            !locked && h('h3', {}, 'Or paste puzzle data'),
+            !locked && paste,
+            !locked &&
                 h(
-                    'button',
-                    {
-                        class: 'pill',
-                        type: 'button',
-                        onclick: () => {
-                            if (paste.value.trim()) actions.importPayload(paste.value);
+                    'div',
+                    { class: 'button-row' },
+                    h(
+                        'button',
+                        {
+                            class: 'pill',
+                            type: 'button',
+                            onclick: () => {
+                                if (paste.value.trim()) actions.importPayload(paste.value);
+                            },
                         },
-                    },
-                    'Load pasted puzzle',
+                        'Load pasted puzzle',
+                    ),
                 ),
-            ),
         ],
     });
 }
