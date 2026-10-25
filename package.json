@@ -1,0 +1,12 @@
+{
+  "name": "buzz-off",
+  "private": true,
+  "description": "Daily 7-letter word puzzle. Dev tooling only; the site itself has no build step.",
+  "type": "module",
+  "scripts": {
+    "build:words": "node tools/build-wordlist.mjs",
+    "build:icons": "node tools/make-icons.mjs",
+    "test": "node --test",
+    "serve": "node tools/serve.mjs"
+  }
+}

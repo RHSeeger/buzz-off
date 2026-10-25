@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Buzz Off</title>
+  <meta name="description" content="A daily word puzzle: how many words can you make with 7 letters?">
+  <meta name="theme-color" content="#f7da21">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Buzz Off">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Buzz Off</h1>
+        <span id="date" class="date"></span>
+        <button id="source-badge" class="source-badge" type="button" hidden>NYT</button>
+      </div>
+      <nav id="tools" class="tools" aria-label="Game menu"></nav>
+    </header>
+
+    <main class="game">
+      <section class="status" aria-label="Progress">
+        <button id="progress" class="progress" type="button"></button>
+        <div id="wordbox" class="wordbox"></div>
+      </section>
+
+      <section class="play" aria-label="Puzzle">
+        <div id="loading" class="loading">Loading today's puzzle…</div>
+        <div id="message" class="message" aria-live="assertive" role="status"></div>
+        <div id="input" class="input empty" aria-live="polite">
+          <span id="input-text" class="input-text"></span><span class="cursor" aria-hidden="true"></span>
+        </div>
+        <div id="hive" class="hive" aria-label="Letters"></div>
+        <div class="controls">
+          <button id="btn-delete" class="pill" type="button">Delete</button>
+          <button id="btn-shuffle" class="pill round" type="button" aria-label="Shuffle letters"></button>
+          <button id="btn-enter" class="pill" type="button">Enter</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toasts" class="toasts"></div>
+  <noscript>This game needs JavaScript.</noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
